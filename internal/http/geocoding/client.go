@@ -1,0 +1,52 @@
+package geocoding
+
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+)
+
+type Response struct {
+	Name      string  `json:"name"`
+	Country   string  `json:"country"`
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+}
+
+type geoClient struct {
+	httpClient *http.Client
+}
+
+func NewGeoClient(httpClient *http.Client) *geoClient {
+	return &geoClient{
+		httpClient: httpClient,
+	}
+}
+
+func (g *geoClient) GetCoordinates(city string) (Response, error) {
+	res, err := g.httpClient.Get(
+		fmt.Sprintf(
+			"https://geocoding-api.open-meteo.com/v1/search?name=%s&count=1&language=ru&format=json",
+			city,
+		),
+	)
+	if err != nil {
+		return Response{}, err
+	}
+
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return Response{}, fmt.Errorf("status code %d:", res.StatusCode)
+	}
+
+	var geoResp struct {
+		Results []Response `json:"results"`
+	}
+	err = json.NewDecoder(res.Body).Decode(&geoResp)
+	if err != nil {
+		return Response{}, err
+	}
+
+	return geoResp.Results[0], nil
+}
