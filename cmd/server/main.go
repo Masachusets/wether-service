@@ -18,8 +18,9 @@ const (
 func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("welcome"))
+	r.Get("/{city}", func(w http.ResponseWriter, r *http.Request) {
+		city := chi.URLParam(r, "city")
+		w.Write([]byte(city))
 	})
 
 	// create a scheduler
