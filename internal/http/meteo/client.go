@@ -17,7 +17,7 @@ type meteoClient struct {
 	httpClient *http.Client
 }
 
-func NewMeteoClient(httpClient *http.Client) *meteoClient {
+func NewClient(httpClient *http.Client) *meteoClient {
 	return &meteoClient{
 		httpClient: httpClient,
 	}

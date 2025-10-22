@@ -17,7 +17,7 @@ type geoClient struct {
 	httpClient *http.Client
 }
 
-func NewGeoClient(httpClient *http.Client) *geoClient {
+func NewClient(httpClient *http.Client) *geoClient {
 	return &geoClient{
 		httpClient: httpClient,
 	}
