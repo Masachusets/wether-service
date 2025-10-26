@@ -28,7 +28,7 @@ type Reading struct {
 
 type Storage struct {
 	data map[string][]Reading
-	mu sync.RWMutex
+	mu   sync.RWMutex
 }
 
 func main() {
@@ -135,14 +135,14 @@ func newCronJob(s gocron.Scheduler, storage *Storage) (gocron.Job, error) {
 				timestamp, err := time.Parse("2006-01-02T15:04", meteoRes.Current.Time)
 				if err != nil {
 					log.Panicln(err)
-					return 
+					return
 				}
 
 				storage.data[city] = append(
 					storage.data[city],
 					Reading{
-						Name: city,
-						Timestamp: timestamp,
+						Name:        city,
+						Timestamp:   timestamp,
 						Temperature: meteoRes.Current.Temperature2m,
 					},
 				)
