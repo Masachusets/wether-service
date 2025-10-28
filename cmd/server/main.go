@@ -42,40 +42,7 @@ func main() {
 	}
 	defer conn.Close(ctx)
 
-	r.Get("/{city}", func(w http.ResponseWriter, r *http.Request) {
-		cityName := chi.URLParam(r, "city")
-
-		var reading Reading
-
-		query := "select name, timestamp, temperature from reading where name = $1 order by timestamp desc limit 1"
-
-		err := conn.QueryRow(
-			ctx,
-			query,
-			cityName,
-		).Scan(
-			&reading.Name,
-			&reading.Timestamp,
-			&reading.Temperature,
-		)
-		if err != nil {
-			w.WriteHeader(http.StatusNotFound)
-			w.Write([]byte(err.Error()))
-			return
-		}
-
-		raw, err := json.Marshal(reading)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-
-		_, err = w.Write(raw)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-	})
+	r.Get("/{city}", getCityHandler(ctx, conn))
 
 	// create a scheduler
 	s, err := gocron.NewScheduler()
@@ -109,6 +76,43 @@ func main() {
 	}()
 
 	wg.Wait()
+}
+
+func getCityHandler(ctx context.Context, conn *pgx.Conn) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		cityName := chi.URLParam(r, "city")
+
+		var reading Reading
+
+		query := "select name, timestamp, temperature from reading where name = $1 order by timestamp desc limit 1"
+
+		err := conn.QueryRow(
+			ctx,
+			query,
+			cityName,
+		).Scan(
+			&reading.Name,
+			&reading.Timestamp,
+			&reading.Temperature,
+		)
+		if err != nil {
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		raw, err := json.Marshal(reading)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		_, err = w.Write(raw)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+	}
 }
 
 func newCronJob(s gocron.Scheduler, ctx context.Context, conn *pgx.Conn) (gocron.Job, error) {
@@ -147,10 +151,10 @@ func newCronJob(s gocron.Scheduler, ctx context.Context, conn *pgx.Conn) (gocron
 
 				query := "insert into reading (name, timestamp, temperature) values ($1, $2, $3)"
 				_, err = conn.Exec(
-					ctx, 
-					query, 
-					city, 
-					timestamp, 
+					ctx,
+					query,
+					city,
+					timestamp,
 					meteoRes.Current.Temperature2m,
 				)
 				if err != nil {
@@ -159,8 +163,8 @@ func newCronJob(s gocron.Scheduler, ctx context.Context, conn *pgx.Conn) (gocron
 				}
 
 				fmt.Printf(
-					"%v updated data for city %s\n", 
-					timestamp.Format("2006-01-02 15:04:05"), 
+					"%v updated data for city %s\n",
+					timestamp.Format("2006-01-02 15:04:05"),
 					city,
 				)
 			},
